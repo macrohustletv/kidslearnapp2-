@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en-NG">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Let's Count 1 to 50</title>
+
+<style>
+:root {
+    --sky: #bfeeff;
+    --navy: #123a82;
+    --green: #12a86b;
+    --cream: #fffdf4;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    min-height: 100%;
+    font-family: "Trebuchet MS", Arial, sans-serif;
+}
+
+body {
+    background: linear-gradient(
+        #a9e7ff 0%,
+        #e6f9ff 70%,
+        #d5f2a0 70%,
+        #c5eb82 100%
+    );
+    color: #102033;
+    overflow-x: hidden;
+}
+
+.stage {
+    min-height: 100vh;
+    width: 100%;
+    padding: clamp(10px, 2.6vw, 30px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(12px, 2vw, 24px);
+}
+
+.speech {
+    width: min(100%, 1120px);
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    gap: clamp(12px, 3vw, 30px);
+    padding: clamp(13px, 2.4vw, 26px);
+    border: 5px solid #ffd13e;
+    border-radius: 32px;
+    background: var(--cream);
+    box-shadow: 0 5px 0 #ffb82324;
+}
+
+.sound-symbol {
+    flex: 0 0 clamp(55px, 8vw, 90px);
+    width: clamp(55px, 8vw, 90px);
+    height: clamp(55px, 8vw, 90px);
+    border-radius: 50%;
+    background: #2479e7;
+    color: #fff;
+    display: grid;
+    place-items: center;
+}
+
+.sound-symbol svg {
+    width: 56%;
+    height: 56%;
+}
+
+.speech-text {
+    min-width: 0;
+}
+
+.speech h1 {
+    margin: 0;
+    color: var(--navy);
+    font-size: clamp(1.5rem, 4.2vw, 3.2rem);
+    line-height: 1.08;
+    font-weight: 900;
+}
+
+.speech p {
+    margin: 7px 0 0;
+    font-size: clamp(1rem, 2.5vw, 1.8rem);
+    font-weight: 700;
+    color: #183e78;
+}
+
+.board {
+    width: min(100%, 1420px);
+    padding: clamp(8px, 2vw, 22px);
+    border: 5px solid #1b9be9;
+    border-radius: 25px;
+    background: #fffffff5;
+    box-shadow: 0 7px 0 #006fb81f;
+}
+
+.numbers {
+    display: grid;
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+    gap: clamp(4px, 1vw, 13px);
+}
+
+.number {
+    min-width: 0;
+    aspect-ratio: 1.12 / 1;
+    display: grid;
+    place-items: center;
+    border: clamp(2px, .48vw, 5px) solid var(--tile);
+    border-radius: clamp(8px, 1.5vw, 20px);
+    background: #fffdf7;
+    font-size: clamp(1rem, 3vw, 3rem);
+    font-weight: 900;
+    line-height: 1;
+    color: #101e2b;
+    transition: transform .2s, background .2s, box-shadow .2s;
+    user-select: none;
+}
+
+.number.active {
+    background: #fff8c9;
+    border-color: #ff3c36;
+    transform: scale(1.05);
+    box-shadow:
+        0 0 0 4px #ffda238c,
+        0 0 22px 7px #ffdc1f99;
+    z-index: 2;
+}
+
+.number.done {
+    background: #e9fff1;
+}
+
+/* LONG POINTING STICK */
+.pointer {
+    position: fixed;
+    z-index: 10;
+    left: 0;
+    top: 0;
+
+    /* Longer stick on desktop */
+    width: clamp(220px, 42vw, 550px);
+    height: 32px;
+
+    pointer-events: none;
+
+    /* Rotate around the hand end */
+    transform-origin: 12% 50%;
+
+    transform: translate(-200vw, -200vh);
+    transition:
+        left .28s ease,
+        top .28s ease,
+        transform .28s ease;
+
+    filter: drop-shadow(2px 3px 2px #3c230a4d);
+}
+
+/* Cartoon hand holding the stick */
+.pointer .hand {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 30px;
+    height: 27px;
+
+    transform: translateY(-50%);
+
+    background: #f2b17e;
+    border: 2px solid #9a5b2e;
+    border-radius: 55% 45% 48% 50%;
+}
+
+.pointer .hand:before {
+    content: "";
+    position: absolute;
+
+    width: 13px;
+    height: 10px;
+    left: -4px;
+    top: -4px;
+
+    background: #f2b17e;
+    border: 2px solid #9a5b2e;
+    border-radius: 8px;
+
+    transform: rotate(-25deg);
+}
+
+/* Wooden stick */
+.pointer .stick {
+    position: absolute;
+    left: 24px;
+    top: 50%;
+
+    width: calc(100% - 26px);
+    height: 8px;
+
+    transform: translateY(-50%);
+
+    border: 2px solid #8b4b1d;
+    border-radius: 10px;
+
+    background: linear-gradient(
+        #f9d19a,
+        #bd7132 48%,
+        #f1b66e 72%,
+        #9c531f
+    );
+}
+
+.controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+button {
+    border: 0;
+    border-radius: 999px;
+    background: var(--green);
+    color: #fff;
+    font: inherit;
+    font-size: clamp(1rem, 2.3vw, 1.6rem);
+    font-weight: 900;
+    padding: 14px 28px;
+    min-height: 54px;
+    cursor: pointer;
+    box-shadow: 0 5px 0 #087d4d;
+}
+
+button:hover {
+    filter: brightness(1.05);
+}
+
+button:active {
+    transform: translateY(3px);
+    box-shadow: 0 2px 0 #087d4d;
+}
+
+button:focus-visible {
+    outline: 4px solid #ffd13e;
+    outline-offset: 4px;
+}
+
+button.secondary {
+    background: #2479e7;
+    box-shadow: 0 5px 0 #1553ad;
+}
+
+button.secondary:active {
+    box-shadow: 0 2px 0 #1553ad;
+}
+
+button:disabled {
+    opacity: .65;
+    cursor: wait;
+}
+
+/* Mobile layout */
+@media (max-width: 680px) {
+    .stage {
+        padding: 8px;
+        gap: 12px;
+    }
+
+    .speech {
+        border-width: 4px;
+        border-radius: 22px;
+    }
+
+    .board {
+        padding: 6px;
+        border-width: 4px;
+        border-radius: 16px;
+    }
+
+    .numbers {
+        gap: 4px;
+    }
+
+    .number {
+        border-radius: 7px;
+        aspect-ratio: 1 / 1;
+        font-size: clamp(.68rem, 3.3vw, 1.2rem);
+        border-width: 2px;
+    }
+
+    .number.active {
+        box-shadow:
+            0 0 0 2px #ffda2399,
+            0 0 10px 3px #ffdc1fb3;
+    }
+
+    button {
+        padding: 11px 18px;
+        min-height: 46px;
+    }
+
+    /* Keep the stick proportional on smaller screens */
+    .pointer {
+        width: clamp(150px, 48vw, 280px);
+        height: 25px;
+    }
+
+    .pointer .hand {
+        width: 24px;
+        height: 22px;
+    }
+
+    .pointer .stick {
+        left: 19px;
+        height: 7px;
+        width: calc(100% - 21px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *:before, *:after {
+        transition-duration: .01ms !important;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<main class="stage">
+
+    <section class="speech" aria-live="polite">
+
+        <div class="sound-symbol" aria-hidden="true">
+            <svg viewBox="0 0 64 64" fill="currentColor">
+                <path d="M7 24h12L37 10c3-2 6 0 6 4v36c0 4-3 6-6 4L19 40H7c-3 0-5-2-5-5V29c0-3 2-5 5-5z"/>
+                <path d="M49 22c6 6 6 14 0 20M54 13c12 11 12 27 0 38"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="5"
+                      stroke-linecap="round"/>
+            </svg>
+        </div>
+
+        <div class="speech-text">
+            <h1 id="prompt">Can we count 1?</h1>
+            <p id="subprompt">Let's start!</p>
+        </div>
+
+    </section>
+
+    <section class="board" aria-label="Numbers one to fifty">
+        <div class="numbers" id="numbers"></div>
+    </section>
+
+    <div class="controls">
+        <button id="playButton" type="button">
+            🔊 <span id="buttonText">Let's Count!</span>
+        </button>
+
+        <button id="stopButton" class="secondary" type="button">
+            Stop
+        </button>
+    </div>
+
+</main>
+
+<div class="pointer" id="pointer" aria-hidden="true">
+    <div class="hand"></div>
+    <div class="stick"></div>
+</div>
+
+<script>
+(() => {
+    "use strict";
+
+    const numbersBox = document.getElementById("numbers");
+    const pointer = document.getElementById("pointer");
+    const prompt = document.getElementById("prompt");
+    const subprompt = document.getElementById("subprompt");
+    const playButton = document.getElementById("playButton");
+    const buttonText = document.getElementById("buttonText");
+    const stopButton = document.getElementById("stopButton");
+
+    const colors = [
+        "#ff9a24", "#ffcb28", "#16b879", "#1ba6e8",
+        "#9a55d8", "#ff4d86", "#ff4545", "#f58235",
+        "#a7c92b", "#1bbbc1"
+    ];
+
+    const tiles = [];
+
+    let currentIndex = -1;
+    let isCounting = false;
+    let runToken = 0;
+    let chosenVoice = null;
+
+    /* Select an available English voice */
+    function chooseVoice() {
+        if (!("speechSynthesis" in window)) return;
+
+        const voices = window.speechSynthesis.getVoices();
+
+        chosenVoice =
+            voices.find(v => /^en-NG$/i.test(v.lang)) ||
+            voices.find(v =>
+                /nigeria|nigerian|abeo|ezinne/i.test(v.name + " " + v.lang)
+            ) ||
+            voices.find(v => /^en-GH$/i.test(v.lang)) ||
+            voices.find(v => /^en-GB$/i.test(v.lang)) ||
+            voices.find(v => /^en-US$/i.test(v.lang)) ||
+            null;
+    }
+
+    if ("speechSynthesis" in window) {
+        chooseVoice();
+
+        window.speechSynthesis.addEventListener(
+            "voiceschanged",
+            chooseVoice
+        );
+    }
+
+    /* Generate numbers 1 to 50 */
+    for (let n = 1; n <= 50; n++) {
+        const tile = document.createElement("div");
+
+        tile.className = "number";
+        tile.textContent = n;
+        tile.dataset.number = n;
+
+        tile.style.setProperty(
+            "--tile",
+            colors[(n - 1) % colors.length]
+        );
+
+        tile.setAttribute("aria-label", String(n));
+
+        numbersBox.appendChild(tile);
+        tiles.push(tile);
+    }
+
+    /*
+     * POSITION THE STICK
+     *
+     * The stick tip is placed near the lower-right edge of
+     * the selected number. The hand is positioned far away.
+     *
+     * This keeps the digits visible while the stick points
+     * diagonally towards the highlighted number.
+     */
+    function movePointerTo(tile) {
+        if (!tile || !pointer) return;
+
+        const rect = tile.getBoundingClientRect();
+
+        // Aim close to the number's lower-right edge.
+        const tipX = rect.left + rect.width * 0.88;
+        const tipY = rect.top + rect.height * 0.82;
+
+        const pointerWidth = pointer.getBoundingClientRect().width;
+
+        // The stick starts near the hand and extends rightward
+        // before rotation. Account for its actual visible length.
+        const stickLength = pointerWidth - 28;
+
+        // Direction from the hand towards the number.
+        // The hand sits diagonally below and to the right.
+        const angle = -135 * Math.PI / 180;
+
+        const originX = tipX - stickLength * Math.cos(angle);
+        const originY = tipY - stickLength * Math.sin(angle);
+
+        // Transform origin is 12% from the left and vertically centered.
+        const left = originX - pointerWidth * 0.12;
+        const top = originY - pointer.offsetHeight / 2;
+
+        pointer.style.left = `${left}px`;
+        pointer.style.top = `${top}px`;
+        pointer.style.transform = `rotate(-135deg)`;
+    }
+
+    /* Highlight the number currently being spoken */
+    function highlightNumber(n) {
+        tiles.forEach((tile, index) => {
+            tile.classList.toggle("active", index === n - 1);
+            tile.classList.toggle("done", index < n - 1);
+        });
+
+        currentIndex = n - 1;
+
+        movePointerTo(tiles[n - 1]);
+
+        prompt.textContent = `Number ${n}`;
+        subprompt.textContent = "Say it with me!";
+    }
+
+    /* Speak using an available browser voice */
+    function speak(text, token) {
+        return new Promise(resolve => {
+            if (!("speechSynthesis" in window)) {
+                resolve();
+                return;
+            }
+
+            if (token !== runToken || !isCounting) {
+                resolve();
+                return;
+            }
+
+            const utterance = new SpeechSynthesisUtterance(text);
+
+            utterance.lang = chosenVoice
+                ? chosenVoice.lang
+                : "en-NG";
+
+            if (chosenVoice) {
+                utterance.voice = chosenVoice;
+            }
+
+            utterance.rate = 0.78;
+            utterance.pitch = 1.04;
+            utterance.volume = 1;
+
+            let finished = false;
+
+            const done = () => {
+                if (finished) return;
+
+                finished = true;
+                clearTimeout(timeout);
+                resolve();
+            };
+
+            utterance.onend = done;
+            utterance.onerror = done;
+
+            const timeout = setTimeout(done, 5000);
+
+            window.speechSynthesis.speak(utterance);
+        });
+    }
+
+    /* Pause briefly between numbers */
+    function delay(ms, token) {
+        return new Promise(resolve => {
+            const start = Date.now();
+
+            function tick() {
+                if (token !== runToken || !isCounting) {
+                    resolve(false);
+                    return;
+                }
+
+                const remaining = ms - (Date.now() - start);
+
+                if (remaining <= 0) {
+                    resolve(true);
+                    return;
+                }
+
+                setTimeout(tick, Math.min(50, remaining));
+            }
+
+            tick();
+        });
+    }
+
+    /* Convert numbers into spoken words */
+    function numberWords(n) {
+        const ones = [
+            "", "one", "two", "three", "four", "five",
+            "six", "seven", "eight", "nine", "ten",
+            "eleven", "twelve", "thirteen", "fourteen",
+            "fifteen", "sixteen", "seventeen",
+            "eighteen", "nineteen"
+        ];
+
+        const tens = [
+            "", "", "twenty", "thirty", "forty", "fifty"
+        ];
+
+        if (n < 20) {
+            return ones[n];
+        }
+
+        const ten = Math.floor(n / 10);
+        const unit = n % 10;
+
+        return unit
+            ? `${tens[ten]} ${ones[unit]}`
+            : tens[ten];
+    }
+
+    /* Start counting from 1 to 50 */
+    async function countFromOne() {
+        if (isCounting) return;
+
+        if (!("speechSynthesis" in window)) {
+            prompt.textContent = "Audio is not supported";
+            subprompt.textContent =
+                "Please open this page in a modern browser.";
+            return;
+        }
+
+        chooseVoice();
+
+        window.speechSynthesis.cancel();
+
+        isCounting = true;
+        const token = ++runToken;
+
+        playButton.disabled = true;
+        buttonText.textContent = "Counting...";
+
+        prompt.textContent = "Can we count from 1 to 50?";
+        subprompt.textContent =
+            "Let's start! Listen and count along.";
+
+        await speak(
+            "Can we count from one to fifty? Let us start!",
+            token
+        );
+
+        for (let n = 1; n <= 50; n++) {
+            if (token !== runToken || !isCounting) break;
+
+            highlightNumber(n);
+
+            await speak(numberWords(n), token);
+
+            const ok = await delay(180, token);
+
+            if (!ok) break;
+        }
+
+        if (token === runToken) {
+            isCounting = false;
+
+            playButton.disabled = false;
+            buttonText.textContent = "Count Again";
+
+            if (currentIndex === 49) {
+                prompt.textContent =
+                    "Wonderful! We counted to 50!";
+
+                subprompt.textContent = "Great job!";
+
+                await speak(
+                    "Wonderful! We counted to fifty. Well done!",
+                    token
+                );
+            }
+        }
+    }
+
+    /* Stop the lesson */
+    function stopCounting() {
+        isCounting = false;
+        runToken++;
+
+        if ("speechSynthesis" in window) {
+            window.speechSynthesis.cancel();
+        }
+
+        playButton.disabled = false;
+        buttonText.textContent = "Let's Count!";
+
+        prompt.textContent = "Can we count 1?";
+        subprompt.textContent = "Let's start!";
+
+        tiles.forEach(tile => {
+            tile.classList.remove("active");
+        });
+
+        pointer.style.transform = "translate(-200vw, -200vh)";
+    }
+
+    playButton.addEventListener("click", countFromOne);
+    stopButton.addEventListener("click", stopCounting);
+
+    /* Recalculate pointer position when the screen changes */
+    window.addEventListener("resize", () => {
+        if (currentIndex >= 0 && isCounting) {
+            movePointerTo(tiles[currentIndex]);
+        }
+    });
+
+    window.addEventListener("scroll", () => {
+        if (currentIndex >= 0 && isCounting) {
+            movePointerTo(tiles[currentIndex]);
+        }
+    }, { passive: true });
+
+})();
+</script>
+
+</body>
+</html>
